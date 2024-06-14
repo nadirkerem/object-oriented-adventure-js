@@ -2,7 +2,7 @@ class Character {
   constructor(name) {
     this.name = name;
     this.health = 100;
-    this.inventory = [];
+    this.inventory = new Inventory();
   }
   static MAX_HEALTH = 100;
   roll(mod = 0) {
@@ -18,7 +18,8 @@ class Adventurer extends Character {
     if (Adventurer.ROLES.includes(role)) {
       this.role = role;
     }
-    this.inventory.push('bedroll', '50 gold coins');
+    this.inventory.addItem('bedroll');
+    this.inventory.addItem('50 gold coins');
   }
   static ROLES = ['Rogue', 'Fighter', 'Healer', 'Wizard'];
   scout() {
@@ -102,11 +103,10 @@ class Companion {
   constructor(name, type, belongings = []) {
     this.name = name;
     this.type = type;
-    this.belongings = belongings;
+    this.inventory = new Inventory(belongings);
   }
   acquire(item) {
-    this.belongings.push(item);
-    console.log(`${this.name} acquired a ${item}.`);
+    this.inventory.addItem(item);
   }
   assist(adventurer) {
     console.log(
@@ -120,9 +120,9 @@ class AdventurerFactory {
     this.role = role;
     this.adventurers = [];
   }
-  generate(name, inventory = [], companion = null) {
+  generate(name, inventoryItems = [], companion = null) {
     const newAdventurer = new Adventurer(name, this.role);
-    newAdventurer.inventory = inventory;
+    inventoryItems.forEach((item) => newAdventurer.inventory.addItem(item));
     newAdventurer.companion = companion;
     this.adventurers.push(newAdventurer);
     return newAdventurer;
@@ -135,7 +135,60 @@ class AdventurerFactory {
   }
 }
 
+class Inventory {
+  constructor(items = []) {
+    this.items = items;
+  }
+
+  addItem(item) {
+    this.items.push(item);
+    console.log(`${item} added to the inventory.`);
+  }
+
+  removeItem(item) {
+    const index = this.items.indexOf(item);
+    if (index > -1) {
+      this.items.splice(index, 1);
+      console.log(`${item} removed from the inventory.`);
+    } else {
+      console.log(`${item} not found in the inventory.`);
+    }
+  }
+
+  searchItem(item) {
+    if (this.items.includes(item)) {
+      console.log(`${item} is in the inventory.`);
+      return true;
+    } else {
+      console.log(`${item} is not in the inventory.`);
+      return false;
+    }
+  }
+
+  sellItem(item, price) {
+    const index = this.items.indexOf(item);
+    if (index > -1) {
+      this.items.splice(index, 1);
+      console.log(`${item} sold for ${price} gold coins.`);
+    } else {
+      console.log(`${item} not found in the inventory.`);
+    }
+  }
+
+  tradeItem(item, targetInventory) {
+    const index = this.items.indexOf(item);
+    if (index > -1) {
+      this.items.splice(index, 1);
+      targetInventory.addItem(item);
+      console.log(`${item} traded to another inventory.`);
+    } else {
+      console.log(`${item} not found in the inventory.`);
+    }
+  }
+}
+
 // Adventurer instances
+
 const healersFactory = new AdventurerFactory('Healer');
 const healerRobin = healersFactory.generate(
   'Robin',
@@ -150,10 +203,8 @@ const fighterJohn = fightersFactory.generate(
   new Companion('Luna', 'Wolf')
 );
 
-fighterJohn.companion.companion = new Companion('Rex', 'Bear', [
-  'honey',
-  'fish',
-]);
+fighterJohn.companion.inventory.addItem('honey');
+fighterJohn.companion.inventory.addItem('fish');
 
 const rogueFactory = new AdventurerFactory('Rogue');
 const rogueRobin = rogueFactory.generate(
@@ -169,12 +220,23 @@ const wizardGandalf = wizardFactory.generate(
   new Companion('Flame', 'Phoenix')
 );
 
-wizardGandalf.companion.companion = new Companion('Spark', 'Dragon', [
-  'crystal',
-  'gold',
-]);
+wizardGandalf.companion.inventory.addItem('crystal');
+wizardGandalf.companion.inventory.addItem('gold');
+
+// Inventory interactions
+
+healerRobin.inventory.addItem('magic scroll');
+
+healerRobin.inventory.removeItem('herbs');
+
+healerRobin.inventory.searchItem('healing potion');
+
+healerRobin.inventory.sellItem('magic scroll', 100);
+
+healerRobin.inventory.tradeItem('healing potion', fighterJohn.inventory);
 
 // Adventurer interactions
+
 rogueRobin.scout();
 
 healerRobin.duel(wizardGandalf);
@@ -189,8 +251,8 @@ wizardGandalf.castSpell(fighterJohn);
 
 fighterJohn.companion.assist(fighterJohn);
 
-fighterJohn.companion.companion.acquire('magic berry');
+fighterJohn.companion.inventory.acquire('magic berry');
 
 wizardGandalf.companion.assist(wizardGandalf);
 
-wizardGandalf.companion.companion.acquire('dragon scale');
+wizardGandalf.companion.inventory.acquire('dragon scale');
