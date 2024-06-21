@@ -1,0 +1,12 @@
+{
+  "name": "object-oriented-adventure",
+  "version": "1.0.0",
+  "description": "Welcome to the Object-Oriented Adventure Game! This project is to practice and demonstrate the principles of object-oriented programming by building a simple adventure game where characters with different roles interact with each other and their companions.",
+  "type": "module",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "",
+  "license": "ISC"
+}
